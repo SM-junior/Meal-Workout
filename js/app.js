@@ -471,11 +471,13 @@ class CalorieTracker {
   addMeal(meal) {
     this._meals.push(meal);
     this._totalCalories += meal.calories;
+    this._displayNewMeal(meal);
     this._render()
   }
   addWorkout(workout) {
     this._workouts.push(workout);
     this._totalCalories -= workout.calories;
+    this._displayWorkout(workout);
     this._render()
   }
   // Private Method // 
@@ -500,15 +502,15 @@ class CalorieTracker {
   _displayCaloriesRemaining() {
     const caloriesRemainingEl = document.getElementById('calories-remaining');
     const remaining = this._calorieLimit - this._totalCalories;
-    caloriesRemainingEl.innerHTML=remaining;
+    caloriesRemainingEl.innerHTML = remaining;
     const progressEl = document.getElementById('calorie-progress');
-    if(remaining<=0){
+    if (remaining <= 0) {
       caloriesRemainingEl.parentElement.parentElement.classList.remove('bg-light');
       caloriesRemainingEl.parentElement.parentElement.classList.add('bg-danger');
       progressEl.classList.remove('bg-success');
       progressEl.classList.add('bg-danger');
     }
-    else{
+    else {
       caloriesRemainingEl.parentElement.parentElement.classList.add('bg-light');
       caloriesRemainingEl.parentElement.parentElement.classList.remove('bg-danger');
       progressEl.classList.add('bg-success');
@@ -522,6 +524,41 @@ class CalorieTracker {
     // const width=Math.min(percentage, 100);
     // progressEl.style.width=`${width}%`
     progressEl.style.width = `${percentage}%`
+
+  }
+
+  _displayNewMeal(meal) {
+    const mealsEl = document.getElementById('meal-items');
+    const mealEl = document.createElement('div');
+    mealEl.classList.add('card', 'my-2');
+    mealEl.setAttribute('data-id', meal.id);
+    mealEl.innerHTML = `
+    <div class="card-body">
+  <div class="d-flex align-items-center justify-content-between">
+    <h4 class="mx-1">${meal.name}</h4>
+    <div class="fs-1 bg-primary text-white text-center rounded-2 px-2 px-sm-5">${meal.calories}</div>
+    <button class="delete btn btn-danger btn-sm mx-2"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+</div>
+    `
+    mealsEl.appendChild(mealEl)
+
+  }
+  _displayWorkout(workout) {
+    const workoutsEl = document.getElementById('workout-items');
+    const workoutEl = document.createElement('div');
+    workoutEl.classList.add('card', 'my-2');
+    workoutEl.setAttribute('data-id', workout.id);
+    workoutEl.innerHTML = `
+    <div class="card-body">
+  <div class="d-flex align-items-center justify-content-between">
+    <h4 class="mx-1">${workout.name}</h4>
+    <div class="fs-1 bg-secondary text-white text-center rounded-2 px-2 px-sm-5">${workout.calories}</div>
+    <button class="delete btn btn-danger btn-sm mx-2"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+</div>
+    `
+    workoutsEl.appendChild(workoutEl)
 
   }
 
@@ -548,68 +585,60 @@ class Workout {
     this.calories = calories;
   }
 }
-// const tracker = new CalorieTracker();
 
-// const breakfast = new Meal('Breakfast', 800);
-// tracker.addMeal(breakfast);
-// const lunch = new Meal('Lunch', 1200);
-// tracker.addMeal(lunch);
 
-// const run = new Workout('Morning run', 10);
-// tracker.addWorkout(run)
-// const gossip = new Workout('Evening run', 350);
-// tracker.addWorkout(gossip)
-
-// console.log(tracker._meals);
-// console.log(tracker._workouts);
-// console.log(tracker._totalCalories);
-
-class App{
-  constructor(){
-    this._tracker=new CalorieTracker();
-    document.getElementById('meal-form').addEventListener('submit', this._newMeal.bind(this));
-    document.getElementById('workout-form').addEventListener('submit', this._newWorkout.bind(this));
+class App {
+  constructor() {
+    this._tracker = new CalorieTracker();
+    document.getElementById('meal-form').addEventListener('submit', this._newItem.bind(this, 'meal'));
+    document.getElementById('workout-form').addEventListener('submit', this._newItem.bind(this, 'workout'));
   }
-  _newMeal(e){
+  _newItem(type, e) {
     e.preventDefault()
-    const name= document.getElementById('meal-name');
-    const calories= document.getElementById('meal-calories');
+    const name = document.getElementById(`${type}-name`);
+    const calories = document.getElementById(`${type}-calories`);
 
     // validate input
-    if(name.value==='' || calories.value===''){
+    if (name.value === '' || calories.value === '') {
       alert('Please fill in all fields')
       return;
     }
-    const meal=new Meal(name.value, +calories.value);
-    this._tracker.addMeal(meal)
-    
-    name.value='';
-    calories.value='';
-    
+    if (type === 'meal') {
+      const meal = new Meal(name.value, +calories.value);
+      this._tracker.addMeal(meal)
+    }
+    else {
+      const workout = new Workout(name.value, +calories.value);
+      this._tracker.addWorkout(workout)
+    }
+
+    name.value = '';
+    calories.value = '';
+
     //auto hiding meal form
-    const collapseMeal=document.getElementById('collapse-meal');
-    const bsCollapse=new bootstrap.Collapse(collapseMeal,{ toggle:true})
+    const collapseItem = document.getElementById(`collapse-${type}`);
+    const bsCollapse = new bootstrap.Collapse(collapseItem, { toggle: true })
   }
 
-  _newWorkout(e){
-    e.preventDefault()
-    const name= document.getElementById('workout-name');
-    const calories= document.getElementById('workout-calories');
+  // _newWorkout(e){
+  //   e.preventDefault()
+  //   const name= document.getElementById('workout-name');
+  //   const calories= document.getElementById('workout-calories');
 
-    // validate input
-    if(name.value==='' || calories.value===''){
-      alert('Please fill in all fields')
-      return;
-    }
-    const workout=new Workout(name.value, +calories.value);
-    this._tracker.addWorkout(workout)
-    
-    name.value='';
-    calories.value='';
+  //   // validate input
+  //   if(name.value==='' || calories.value===''){
+  //     alert('Please fill in all fields')
+  //     return;
+  //   }
+  //   const workout=new Workout(name.value, +calories.value);
+  //   this._tracker.addWorkout(workout)
 
-    //auto hiding workout form
-    const collapseMeal=document.getElementById('collapse-workout');
-    const bsCollapse=new bootstrap.Collapse(collapseMeal,{ toggle:true})
-  }
+  //   name.value='';
+  //   calories.value='';
+
+  //   //auto hiding workout form
+  //   const collapseMeal=document.getElementById('collapse-workout');
+  //   const bsCollapse=new bootstrap.Collapse(collapseMeal,{ toggle:true})
+  // }
 }
-const app=new App();
+const app = new App();
